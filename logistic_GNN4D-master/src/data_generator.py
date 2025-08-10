@@ -211,8 +211,8 @@ class Generator(object):
                 min_size=min_size
             )
 
-            W_dense, labels, eigvecs_top = self.SBM_multiclass(
-                p, q, graph_size, self.n_classes
+            W_dense, labels, eigvecs_top = self.imbalanced_SBM_multiclass(
+                p, q, graph_size, self.n_classes,class_sizes
             )
 
             # Step 3: 稀疏化邻接矩阵

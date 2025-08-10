@@ -1,7 +1,7 @@
 import os
 from multiprocessing import Pool
 from scipy.sparse import issparse
-
+import random
 import multiprocessing
 from torch.utils.data import Dataset
 import openpyxl
@@ -82,7 +82,7 @@ parser.add_argument('--noise_model', nargs='?', const=1, type=int, default=2)
 parser.add_argument('--generative_model', nargs='?', const=1, type=str,
                     default='SBM_multiclass')
 parser.add_argument('--batch_size', nargs='?', const=1, type=int, default= 16)
-parser.add_argument('--mode', nargs='?', const=1, type=str, default='train')
+parser.add_argument('--mode', nargs='?', const=1, type=str, default='test')
 default_path = os.path.join(os.path.dirname(os.path.abspath(__file__)))
 parser.add_argument('--mode_isbalanced', nargs='?', const=1, type=str, default='imbalanced')
 parser.add_argument('--path_gnn', nargs='?', const=1, type=str, default=default_path)
@@ -95,7 +95,7 @@ parser.add_argument('--print_freq', nargs='?', const=1, type=int, default=1)
 parser.add_argument('--test_freq', nargs='?', const=1, type=int, default=500)
 parser.add_argument('--save_freq', nargs='?', const=1, type=int, default=2000)
 parser.add_argument('--clip_grad_norm', nargs='?', const=1, type=float,
-                    default=40.0)
+                    default=5.0)
 parser.add_argument('--freeze_bn', dest='eval_vs_train', action='store_true')
 parser.set_defaults(eval_vs_train=True)
 
@@ -507,7 +507,12 @@ def test_single_first_period(gnn_first_period, lr_model, gen, n_classes, args, i
 
     # 选择模式
     if mode == 'imbalanced':
-        W, true_labels, eigvecs_top = gen.imbalanced_sample_otf_single(class_sizes, is_training=True, cuda=True)
+        if random.random() < 0.5:
+            random_class_sizes = class_sizes[::-1]  # 翻转成 [950, 50]
+        else:
+            random_class_sizes = class_sizes
+
+        W, true_labels, eigvecs_top = gen.imbalanced_sample_otf_single(random_class_sizes, is_training=True, cuda=True)
         true_labels = true_labels.type(dtype_l)
 
     acc_spectral_clustering, acc_refined = spectral_clustering_adj(W, n_classes, true_labels)

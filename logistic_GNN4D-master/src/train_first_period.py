@@ -148,6 +148,8 @@ def train_first_period_with_early_stopping(
             patience_counter = 0
             torch.save(gnn.cpu(), save_path)
             print("New best model saved.")
+            if torch.cuda.is_available():
+                gnn = gnn.to('cuda')
         else:
             patience_counter += 1
             print(f"No improvement. Patience: {patience_counter}/{patience}")

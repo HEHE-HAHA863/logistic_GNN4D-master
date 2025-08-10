@@ -31,44 +31,45 @@ def GMul(W, x):
     output = torch.cat(output, 2) # output has size (bs, N, J*num_features)
     return output
 
-#
-# class gnn_atomic(nn.Module):
-#     def __init__(self, feature_maps, J):
-#         super(gnn_atomic, self).__init__()
-#         self.num_inputs = J*feature_maps[0]
-#         self.num_outputs = feature_maps[2]
-#         self.fc1 = nn.Linear(self.num_inputs, self.num_outputs // 2)
-#         self.fc2 = nn.Linear(self.num_inputs, self.num_outputs - self.num_outputs // 2)
-#         self.bn = nn.BatchNorm1d(self.num_outputs)
-#
-#     def forward(self, WW, x):
-#         x = GMul(WW, x)
-#         x_size = x.size()
-#         x = x.contiguous()
-#         x = x.view(-1, self.num_inputs)
-#         x1 = F.relu(self.fc1(x)) # has size (bs*N, num_outputs)
-#         x2 = self.fc2(x)
-#         x = torch.cat((x1, x2), 1)
-#         x = self.bn(x)
-#         x = x.view(*x_size[:-1], self.num_outputs)
-#         return WW, x
+
 class gnn_atomic(nn.Module):
     def __init__(self, feature_maps, J):
-        super().__init__()
-        self.num_inputs = J * feature_maps[0]
+        super(gnn_atomic, self).__init__()
+        self.num_inputs = J*feature_maps[0]
         self.num_outputs = feature_maps[2]
         self.fc1 = nn.Linear(self.num_inputs, self.num_outputs // 2)
-        self.bn  = nn.BatchNorm1d(self.num_outputs)
+        self.fc2 = nn.Linear(self.num_inputs, self.num_outputs - self.num_outputs // 2)
+        self.bn = nn.BatchNorm1d(self.num_outputs)
 
     def forward(self, WW, x):
-        x = GMul(WW, x)                      # (bs, N, Cin)
-        bs, N, _ = x.shape
-        x = x.contiguous().view(-1, self.num_inputs)     # (bs*N, Cin)
-        h = self.fc1(x)                                   # (bs*N, Cout/2)
-        x = torch.cat([F.relu(h), h], dim=1)              # (bs*N, Cout)
-        x = self.bn(x)                                    # BN on (N, C)
-        x = x.view(bs, N, self.num_outputs)
+        x = GMul(WW, x)
+        x_size = x.size()
+        x = x.contiguous()
+        x = x.view(-1, self.num_inputs)
+        x1 = F.relu(self.fc1(x)) # has size (bs*N, num_outputs)
+        x2 = self.fc2(x)
+        x = torch.cat((x1, x2), 1)
+        x = self.bn(x)
+        x = x.view(*x_size[:-1], self.num_outputs)
         return WW, x
+
+# class gnn_atomic(nn.Module):
+#     def __init__(self, feature_maps, J):
+#         super().__init__()
+#         self.num_inputs = J * feature_maps[0]
+#         self.num_outputs = feature_maps[2]
+#         self.fc1 = nn.Linear(self.num_inputs, self.num_outputs // 2)
+#         self.bn  = nn.BatchNorm1d(self.num_outputs)
+#
+#     def forward(self, WW, x):
+#         x = GMul(WW, x)                      # (bs, N, Cin)
+#         bs, N, _ = x.shape
+#         x = x.contiguous().view(-1, self.num_inputs)     # (bs*N, Cin)
+#         h = self.fc1(x)                                   # (bs*N, Cout/2)
+#         x = torch.cat([F.relu(h), h], dim=1)              # (bs*N, Cout)
+#         x = self.bn(x)                                    # BN on (N, C)
+#         x = x.view(bs, N, self.num_outputs)
+#         return WW, x
 
     
 class gnn_atomic_final(nn.Module):
